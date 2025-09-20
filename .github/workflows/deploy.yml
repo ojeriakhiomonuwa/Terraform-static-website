@@ -1,10 +1,8 @@
 #YAML file to deploy website to S3 using GitHub Actions
 name: Deploy Website to S3
-# Trigger the workflow on push to main branch
+# Trigger the workflow manually only
 on:
-  push: # Trigger on push events.
-    branches:
-      - main # Change to your default branch if different
+  workflow_dispatch: # Manual trigger only - no automatic deployment
 # Ensure only one run at a time to prevent state conflicts
 concurrency:
   group: terraform-state
