@@ -1,0 +1,73 @@
+# =============================================================================
+# TERRAFORM DESTROY WORKFLOW
+# =============================================================================
+# Purpose: Destroys ALL infrastructure resources in AWS
+# Triggers: MANUAL ONLY - requires typing "destroy" to confirm
+# Action: Deletes S3 bucket, CloudFront, Route53 records, etc.
+# WARNING: This is IRREVERSIBLE and will delete your website!
+# =============================================================================
+
+name: Terraform Destroy
+
+# WHEN THIS WORKFLOW RUNS:
+# MANUAL TRIGGER ONLY - No automatic triggers for safety
+on:
+  workflow_dispatch:         # Only runs when manually triggered from GitHub UI
+    inputs:                  # Requires user input for safety
+      confirm_destroy:
+        description: 'Type "destroy" to confirm'  # User must type exactly "destroy"
+        required: true                            # This input is mandatory
+        default: ''                               # No default value (forces user input)
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest   # Uses GitHub's Ubuntu virtual machine
+    
+    # SET DEFAULT WORKING DIRECTORY:
+    # All commands will run from ./WebApp directory (where main.tf is located)
+    defaults:
+      run:
+        working-directory: ./WebApp
+    
+    steps:
+    # STEP 1: SAFETY CHECK
+    # Validates that user typed exactly "destroy" to confirm
+    # If not, the workflow stops here and doesn't destroy anything
+    - name: Validate destroy confirmation
+      if: github.event.inputs.confirm_destroy != 'destroy'  # Check if input matches "destroy"
+      run: |
+        echo "❌ Destroy confirmation failed. You must type 'destroy' to proceed."
+        exit 1                                               # Exit with error code (stops workflow)
+    
+    # STEP 2: GET THE CODE
+    # Downloads your repository code to the GitHub runner
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # STEP 3: INSTALL TERRAFORM
+    # Downloads and installs Terraform CLI version 1.5.0
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+    
+    # STEP 4: CONFIGURE AWS ACCESS
+    # Sets up AWS credentials using GitHub secrets for secure access
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}         # Your AWS Access Key
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # Your AWS Secret Key
+        aws-region: us-east-1                                         # AWS region for resources
+    
+    # STEP 5: INITIALIZE TERRAFORM
+    # Downloads required providers (AWS) and sets up backend state
+    - name: Terraform Init
+      run: terraform init
+    
+    # STEP 6: DESTROY ALL INFRASTRUCTURE
+    # Deletes ALL AWS resources defined in your Terraform configuration
+    # -auto-approve: Skips manual confirmation (we already confirmed above)
+    # WARNING: This permanently deletes your S3 bucket, CloudFront, DNS records!
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
