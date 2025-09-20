@@ -9,6 +9,11 @@
 
 name: Terraform Apply
 
+# Prevent concurrent runs to avoid state conflicts
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
 # WHEN THIS WORKFLOW RUNS:
 on:
   push:                      # Automatically runs when code is pushed
