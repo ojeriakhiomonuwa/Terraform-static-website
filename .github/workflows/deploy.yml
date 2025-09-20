@@ -2,7 +2,7 @@
 name: Deploy Website to S3
 # Trigger the workflow on push to main branch
 on:
-  push: # Trigger on push events
+  push: # Trigger on push events.
     branches:
       - main # Change to your default branch if different
 # Ensure only one run at a time to prevent state conflicts
