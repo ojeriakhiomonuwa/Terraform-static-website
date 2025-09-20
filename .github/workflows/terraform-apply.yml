@@ -1,0 +1,66 @@
+# =============================================================================
+# TERRAFORM APPLY WORKFLOW
+# =============================================================================
+# Purpose: Deploys infrastructure changes to AWS
+# Triggers: On push to main branch OR manual trigger
+# Action: Actually creates/modifies/destroys AWS resources
+# WARNING: This workflow makes REAL changes and can cost money!
+# =============================================================================
+
+name: Terraform Apply
+
+# WHEN THIS WORKFLOW RUNS:
+on:
+  push:                      # Automatically runs when code is pushed
+    branches: [ main ]       # Only when pushing to main branch (production)
+  workflow_dispatch:         # Allows manual triggering from GitHub UI
+
+jobs:
+  terraform-apply:
+    runs-on: ubuntu-latest   # Uses GitHub's Ubuntu virtual machine
+    
+    # SET DEFAULT WORKING DIRECTORY:
+    # All commands will run from ./WebApp directory (where main.tf is located)
+    defaults:
+      run:
+        working-directory: ./WebApp
+    
+    steps:
+    # STEP 1: GET THE CODE
+    # Downloads your repository code to the GitHub runner
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # STEP 2: INSTALL TERRAFORM
+    # Downloads and installs Terraform CLI version 1.5.0
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+    
+    # STEP 3: CONFIGURE AWS ACCESS
+    # Sets up AWS credentials using GitHub secrets for secure access
+    # These secrets must be added in: Repo Settings > Secrets and variables > Actions
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}         # Your AWS Access Key
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # Your AWS Secret Key
+        aws-region: us-east-1                                         # AWS region for resources
+    
+    # STEP 4: INITIALIZE TERRAFORM
+    # Downloads required providers (AWS) and sets up backend state
+    - name: Terraform Init
+      run: terraform init
+    
+    # STEP 5: CREATE EXECUTION PLAN (PREVIEW)
+    # Shows what will be changed before applying (good practice)
+    - name: Terraform Plan
+      run: terraform plan
+    
+    # STEP 6: APPLY CHANGES TO AWS
+    # Actually creates/modifies AWS resources based on your Terraform configuration
+    # -auto-approve: Skips manual confirmation (dangerous but needed for automation)
+    # WARNING: This step costs money and makes real infrastructure changes!
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
