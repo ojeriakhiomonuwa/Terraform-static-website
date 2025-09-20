@@ -1,8 +1,8 @@
 # The file: Module/Cloudfront/outputs.tf
 # This file defines outputs for the CloudFront distribution module in Terraform.
-output "oai_iam_arn" {
-  description = "IAM ARN for CloudFront Origin Access Identity"
-  value       = aws_cloudfront_origin_access_identity.this.iam_arn
+output "distribution_arn" {
+  description = "ARN of the CloudFront distribution"
+  value       = aws_cloudfront_distribution.this.arn
 }
 
 #  This output provides the IAM ARN for the CloudFront Origin Access Identity (OAI),

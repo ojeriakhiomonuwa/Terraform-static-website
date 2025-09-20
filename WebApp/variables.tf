@@ -1,44 +1,32 @@
-# Variable Declarations
-# ============================
-# just declaring variables here no values
-# ============================
-# These variables define inputs for the Terraform configuration.
-# They do not have values here, values can be passed via tfvars,
-# CLI, or environment variables.
-# ============================
+# Input variables for root module (values set in terraform.tfvars)
 
-# The AWS region where all resources (S3, CloudFront, Route 53, etc.) will be created.
+# AWS region for all resources
 variable "aws_region" {
-  description = "The AWS region to create resources in"
-}
-
-
-# The root domain name for the static website (e.g., example.com).
-# This will be used in Route 53 and CloudFront distribution setup.
-variable "domain_name" {
-  description = "The domain name for the static website (e.g., example.com)"
-}
-
-# The subdomain for the website (e.g., www, dev).
-# Useful if you want www.example.com or dev.example.com.
-variable "subdomain_name" {
-  description = "The subdomain name for the static website (e.g., www, dev)"
-}
-
-
-
-
-# Local directory containing your static website files.
-# These files will be uploaded to the S3 bucket for hosting.
-variable "local_file_path" {
-  description = "The local path to the static website files"
+  description = "AWS region to create resources in"
   type        = string
 }
 
+# Root domain name (e.g., ojes.online)
+variable "domain_name" {
+  description = "Root domain name for the website"
+  type        = string
+}
 
-# The default index page of the static website.
-# Typically "index.html", but can be overridden if needed.
+# Subdomain prefix (e.g., www)
+variable "subdomain_name" {
+  description = "Subdomain prefix (creates www.ojes.online)"
+  type        = string
+}
+
+# Local path to website files
+variable "local_file_path" {
+  description = "Local directory containing website files"
+  type        = string
+}
+
+# Default index page
 variable "index_page" {
-  description = "The path to the index page of the static website"
+  description = "Default index page for the website"
+  type        = string
   default     = "index.html"
 }

@@ -1,58 +1,48 @@
-# Creates a CloudFront Origin Access Identity (OAI) to securely access private S3 bucket content
-###############################################################
-# CloudFront Distribution Module
-#
-# This module creates a CloudFront distribution for serving a static website
-# from a private S3 bucket. It also creates an Origin Access Identity (OAI)
-# to securely allow CloudFront to access the S3 bucket contents.
-###############################################################
-
-# Creates a CloudFront Origin Access Identity (OAI) to securely access private S3 bucket content
-resource "aws_cloudfront_origin_access_identity" "this" {
-  comment = "OAI for S3 static website"
-}
+# CloudFront CDN distribution for global content delivery
 resource "aws_cloudfront_distribution" "this" {
-  # Defines the S3 origin for CloudFront and configures it to use the OAI
+  # Configure S3 website as the origin (where content comes from)
   origin {
-    domain_name = var.s3_bucket_domain
-    origin_id   = "s3-origin"
+    domain_name = var.s3_bucket_domain  # S3 website endpoint (e.g., bucket.s3-website-us-east-1.amazonaws.com)
+    origin_id   = "s3-website-origin"
 
-    # This block configures CloudFront to use the OAI for accessing the S3 bucket. 
-    s3_origin_config {
-  origin_access_identity = aws_cloudfront_origin_access_identity.this.cloudfront_access_identity_path
-}
+    # Custom origin config for S3 website endpoints (not REST API)
+    custom_origin_config {
+      http_port              = 80          # Standard HTTP port
+      https_port             = 443         # Standard HTTPS port
+      origin_protocol_policy = "http-only" # S3 website endpoints only support HTTP
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
   }
 
-  # Enables the distribution and sets the default root object
-  enabled             = true
-  default_root_object = "index.html"
+  enabled             = true         # Activate the distribution
+  default_root_object = "index.html" # Default file to serve at root URL
 
-  # Default cache behavior for the distribution
+  # How CloudFront handles requests and caching
   default_cache_behavior {
-    target_origin_id       = "s3-origin"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    compress               = true
+    target_origin_id       = "s3-website-origin"
+    viewer_protocol_policy = "redirect-to-https"    # Force HTTPS for security
+    allowed_methods        = ["GET", "HEAD"]        # Only allow read operations
+    cached_methods         = ["GET", "HEAD"]        # Cache these methods
+    compress               = true                    # Compress files for faster delivery
 
-    # Using managed cache policies is the recommended approach for CloudFront distributions.
-    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"  # Managed-CachingDisabled
+    # AWS managed policies for optimal performance
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"          # CachingOptimized
+    origin_request_policy_id = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf" # CORS-S3Origin
   }
 
-  # Configures SSL certificate for HTTPS
+  # SSL certificate configuration for custom domain
   viewer_certificate {
-    acm_certificate_arn = var.acm_certificate_arn
-    ssl_support_method  = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2019"
+    acm_certificate_arn = var.acm_certificate_arn    # SSL certificate from ACM
+    ssl_support_method  = "sni-only"                 # Modern SSL method
+    minimum_protocol_version = "TLSv1.2_2019"       # Secure TLS version
   }
 
-  # Domain aliases for the distribution
-  aliases = [var.domain_name]
+  aliases = [var.domain_name]  # Custom domain (e.g., www.ojes.online)
 
-  # No geo restrictions (serves globally)
+  # Geographic restrictions (none = serve globally)
   restrictions {
     geo_restriction {
-      restriction_type = "none"
+      restriction_type = "none"  # No geographic blocking
     }
   }
 }

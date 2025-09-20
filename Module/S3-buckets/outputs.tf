@@ -12,6 +12,19 @@ output "regional_domain_name" {
   value       = aws_s3_bucket.this.bucket_regional_domain_name
 }
 
+# S3 website endpoint for CloudFront origin
+output "website_endpoint" {
+  description = "The website endpoint of the S3 bucket"
+  value       = aws_s3_bucket_website_configuration.this.website_endpoint
+}
+
+
+# This output provides the ARN of the S3 bucket
+output "bucket_arn" {
+  description = "The ARN of the S3 bucket"
+  value       = aws_s3_bucket.this.arn
+}
+
 
 
 

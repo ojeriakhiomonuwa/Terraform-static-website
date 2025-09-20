@@ -35,7 +35,7 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: 1.5.0
+        terraform_version: 1.6.0
     
     # STEP 3: CONFIGURE AWS ACCESS
     # Sets up AWS credentials using GitHub secrets for secure access
