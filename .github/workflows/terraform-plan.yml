@@ -1,0 +1,59 @@
+# =============================================================================
+# TERRAFORM PLAN WORKFLOW
+# =============================================================================
+# Purpose: Validates Terraform configuration and shows execution plan
+# Triggers: On pull requests to main branch OR manual trigger
+# Safety: Shows what will be created/modified/destroyed WITHOUT making changes
+# =============================================================================
+
+name: Terraform Plan
+
+# WHEN THIS WORKFLOW RUNS:
+on:
+  pull_request:              # Automatically runs when PR is created/updated
+    branches: [ main ]       # Only for PRs targeting the main branch
+  workflow_dispatch:         # Allows manual triggering from GitHub UI
+
+jobs:
+  terraform-plan:
+    runs-on: ubuntu-latest   # Uses GitHub's Ubuntu virtual machine
+    
+    # SET DEFAULT WORKING DIRECTORY:
+    # All commands will run from ./WebApp directory (where main.tf is located)
+    defaults:
+      run:
+        working-directory: ./WebApp
+    
+    steps:
+    # STEP 1: GET THE CODE
+    # Downloads your repository code to the GitHub runner
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # STEP 2: INSTALL TERRAFORM
+    # Downloads and installs Terraform CLI version 1.5.0
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+    
+    # STEP 3: CONFIGURE AWS ACCESS
+    # Sets up AWS credentials using GitHub secrets for secure access
+    # These secrets must be added in: Repo Settings > Secrets and variables > Actions
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}         # Your AWS Access Key
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}   # Your AWS Secret Key
+        aws-region: us-east-1                                         # AWS region for resources
+    
+    # STEP 4: INITIALIZE TERRAFORM
+    # Downloads required providers (AWS) and sets up backend state
+    - name: Terraform Init
+      run: terraform init
+    
+    # STEP 5: CREATE EXECUTION PLAN
+    # Shows what resources will be created, modified, or destroyed
+    # IMPORTANT: This does NOT make any changes - it's read-only!
+    - name: Terraform Plan
+      run: terraform plan
