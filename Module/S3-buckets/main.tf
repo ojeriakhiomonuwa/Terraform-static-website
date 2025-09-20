@@ -26,9 +26,15 @@ resource "aws_s3_bucket_public_access_block" "this" {
   restrict_public_buckets = false  # Allow public bucket access
 }
 
+# Small delay to ensure public access block changes take effect
+resource "time_sleep" "wait_for_bucket_settings" {
+  depends_on = [aws_s3_bucket_public_access_block.this]
+  create_duration = "10s"
+}
+
 # Bucket policy to make all objects publicly readable
 resource "aws_s3_bucket_policy" "public_read" {
-  depends_on = [aws_s3_bucket_public_access_block.this]  # Wait for access blocks to be disabled
+  depends_on = [time_sleep.wait_for_bucket_settings]  # Wait for access blocks to be disabled
   
   bucket = aws_s3_bucket.this.id
   policy = jsonencode({
