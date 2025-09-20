@@ -62,6 +62,12 @@ jobs:
     # Shows what will be changed before applying (good practice)
     - name: Terraform Plan
       run: terraform plan
+      env:
+        TF_VAR_aws_region: us-east-1
+        TF_VAR_domain_name: ojes.online
+        TF_VAR_subdomain_name: www
+        TF_VAR_local_file_path: ./2135_mini_finance
+        TF_VAR_index_page: index.html
     
     # STEP 6: APPLY CHANGES TO AWS
     # Actually creates/modifies AWS resources based on your Terraform configuration
@@ -69,3 +75,9 @@ jobs:
     # WARNING: This step costs money and makes real infrastructure changes!
     - name: Terraform Apply
       run: terraform apply -auto-approve
+      env:
+        TF_VAR_aws_region: us-east-1
+        TF_VAR_domain_name: ojes.online
+        TF_VAR_subdomain_name: www
+        TF_VAR_local_file_path: ./2135_mini_finance
+        TF_VAR_index_page: index.html
