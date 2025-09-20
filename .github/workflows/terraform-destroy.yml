@@ -9,6 +9,11 @@
 
 name: Terraform Destroy
 
+# Prevent concurrent runs to avoid state conflicts
+concurrency:
+  group: terraform-state
+  cancel-in-progress: false
+
 # WHEN THIS WORKFLOW RUNS:
 # MANUAL TRIGGER ONLY - No automatic triggers for safety
 on:
@@ -71,3 +76,9 @@ jobs:
     # WARNING: This permanently deletes your S3 bucket, CloudFront, DNS records!
     - name: Terraform Destroy
       run: terraform destroy -auto-approve
+      env:
+        TF_VAR_aws_region: us-east-1
+        TF_VAR_domain_name: ojes.online
+        TF_VAR_subdomain_name: www
+        TF_VAR_local_file_path: ./2135_mini_finance
+        TF_VAR_index_page: index.html
