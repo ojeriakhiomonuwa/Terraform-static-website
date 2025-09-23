@@ -102,6 +102,58 @@ ACM ensures secure HTTPS connections.
 
 GitHub Actions pipelines automate deployment, apply, and destroy steps.
 
+
+
+##  Troubleshooting - Common Issues & Solutions
+
+
+### 1. S3 State Locking Issues
+**Problem:** Invalid `use_lockfile` parameter in backend configuration
+```
+Error: Unsupported argument "use_lockfile" is not expected here
+```
+**Solution:** Remove invalid parameter, use GitHub Actions concurrency control instead
+
+### 2. GitHub Actions Pipeline Hanging
+**Problem:** Workflows stuck waiting for variable input
+```
+var.aws_region
+  AWS region to create resources in
+```
+**Solution:** Add `TF_VAR_` environment variables to prevent interactive prompts
+```yaml
+env:
+  TF_VAR_aws_region: us-east-1
+  TF_VAR_domain_name: ojes.online
+  TF_VAR_subdomain_name: www
+```
+
+### 3. S3 Bucket Policy Access Denied
+**Problem:** Cannot apply public bucket policy due to timing issues
+```
+Error: AccessDenied: User is not authorized to perform: s3:PutBucketPolicy
+because public policies are blocked by the BlockPublicPolicy setting
+```
+**Solution:** Add `time_sleep` resource with 10-second delay for public access block changes
+```hcl
+resource "time_sleep" "wait_for_bucket_settings" {
+  depends_on = [aws_s3_bucket_public_access_block.this]
+  create_duration = "10s"
+}
+```
+
+### 4. DNS Not Resolving
+**Problem:** Domain not loading after deployment
+```
+This site can't be reached - DNS_PROBE_FINISHED_NXDOMAIN
+```
+**Solution:** Wait for DNS propagation (5-60 minutes), clear DNS cache with `ipconfig /flushdns`
+
+
+### 5. Manual Pipeline Triggers
+**Problem:** Automatic deployments on every push (cost/safety concern)
+**Solution:** Change apply pipeline to `workflow_dispatch` (manual only)
+
 ## Notes
 
 Ensure AWS credentials are configured for Terraform and GitHub Actions.  
